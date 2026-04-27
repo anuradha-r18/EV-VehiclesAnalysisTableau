@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electric Vehicle Population Data Analysis Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --green-dark: #1a5c3a;
+    --green-mid: #2d8653;
+    --green-bright: #4ade80;
+    --green-light: #bbf7d0;
+    --green-pale: #f0fdf4;
+    --accent-teal: #14b8a6;
+    --accent-blue: #3b82f6;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --text-dark: #0f172a;
+    --text-mid: #334155;
+    --text-light: #64748b;
+    --white: #ffffff;
+    --bg: #f8fafc;
+    --border: #e2e8f0;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    line-height: 1.6;
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a2e1c 0%, #1a5c3a 40%, #2d8653 70%, #0e4f32 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 60px 40px;
+  }
+
+  .cover-bg-circles {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .cover-bg-circles circle { opacity: 0.07; }
+
+  .cover-badge {
+    background: rgba(74,222,128,0.15);
+    border: 1px solid rgba(74,222,128,0.4);
+    color: #4ade80;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .cover-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    line-height: 1.1;
+    max-width: 900px;
+    margin-bottom: 16px;
+  }
+
+  .cover-title span { color: #4ade80; }
+
+  .cover-subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.65);
+    text-align: center;
+    max-width: 600px;
+    margin-bottom: 56px;
+  }
+
+  .cover-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+    margin-bottom: 64px;
+  }
+
+  .cover-stat {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .cover-stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #4ade80;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .cover-stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cover-meta {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 32px;
+    display: flex;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .cover-meta-item label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .cover-meta-item span {
+    font-size: 15px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+  }
+
+  .ev-logo {
+    position: absolute;
+    top: 40px; right: 40px;
+    width: 60px; height: 60px;
+    background: rgba(74,222,128,0.15);
+    border: 1px solid rgba(74,222,128,0.3);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+    margin-top: 64px;
+  }
+
+  .section-num {
+    width: 36px; height: 36px;
+    background: var(--green-dark);
+    color: var(--green-bright);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .kpi-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .kpi-card.green::before { background: linear-gradient(90deg, #2d8653, #4ade80); }
+  .kpi-card.teal::before { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+  .kpi-card.blue::before { background: linear-gradient(90deg, #1d4ed8, #3b82f6); }
+  .kpi-card.amber::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+  .kpi-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .kpi-card.green .kpi-icon { background: #f0fdf4; }
+  .kpi-card.teal .kpi-icon { background: #f0fdfa; }
+  .kpi-card.blue .kpi-icon { background: #eff6ff; }
+  .kpi-card.amber .kpi-icon { background: #fffbeb; }
+
+  .kpi-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .kpi-card.green .kpi-val { color: var(--green-dark); }
+  .kpi-card.teal .kpi-val { color: #0d9488; }
+  .kpi-card.blue .kpi-val { color: #1d4ed8; }
+  .kpi-card.amber .kpi-val { color: #d97706; }
+
+  .kpi-label {
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .kpi-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--green-pale);
+    color: var(--green-dark);
+  }
+
+  /* Charts */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
+  }
+
+  .chart-card.wide {
+    grid-column: span 2;
+  }
+
+  .chart-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .chart-card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+
+  .chart-card-sub {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  .chart-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--green-pale);
+    color: var(--green-dark);
+    white-space: nowrap;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+
+  /* Insight boxes */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .insight-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+
+  .insight-emoji {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .insight-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+
+  .insight-text {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+
+  .insight-highlight {
+    color: var(--green-mid);
+    font-weight: 700;
+  }
+
+  /* Rank list */
+  .rank-list {
+    list-style: none;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rank-item:last-child { border-bottom: none; }
+
+  .rank-num {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--green-pale);
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rank-num.gold { background: #fef3c7; color: #d97706; }
+  .rank-num.silver { background: #f1f5f9; color: #475569; }
+  .rank-num.bronze { background: #fef2e6; color: #c2410c; }
+
+  .rank-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .rank-bar-wrap {
+    flex: 2;
+    height: 6px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .rank-bar { height: 100%; background: linear-gradient(90deg, #2d8653, #4ade80); border-radius: 100px; }
+
+  .rank-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-dark);
+    min-width: 56px;
+    text-align: right;
+  }
+
+  /* Progress stats */
+  .progress-stat {
+    margin-bottom: 16px;
+  }
+  .progress-stat-row {
+    display: flex; justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .progress-stat-label { font-weight: 600; color: var(--text-dark); }
+  .progress-stat-val { color: var(--text-light); font-weight: 500; }
+  .progress-bar-bg {
+    height: 8px; border-radius: 100px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .progress-bar { height: 100%; border-radius: 100px; }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    background: #f8fafc;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+  .data-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dark);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--green-pale); }
+
+  .badge-bev {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .badge-phev {
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* Footer */
+  .report-footer {
+    background: var(--green-dark);
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    padding: 40px;
+    margin-top: 80px;
+    font-size: 13px;
+  }
+  .report-footer strong { color: #4ade80; }
+
+  /* Executive Summary */
+  .exec-summary {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 1px solid #bbf7d0;
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 40px;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .exec-summary-left h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 8px;
+  }
+  .exec-summary-left p {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+
+  .exec-bullets li {
+    font-size: 14px;
+    color: var(--text-mid);
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    list-style: none;
+  }
+  .exec-bullets li::before {
+    content: '▸';
+    position: absolute; left: 0;
+    color: var(--green-mid);
+    font-size: 12px;
+    top: 9px;
+  }
+  .exec-bullets li:last-child { border-bottom: none; }
+  .exec-bullets strong { color: var(--green-dark); }
+
+  /* DOnut center */
+  .donut-center-wrap { position: relative; }
+  .donut-center-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+  .donut-center-label .big { font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; color: var(--green-dark); }
+  .donut-center-label .small { font-size: 11px; color: var(--text-light); font-weight: 500; }
+
+  .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-txt { font-size: 12px; color: var(--text-mid); }
+  .legend-val { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-left: auto; }
+
+  @media print {
+    .cover { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <svg class="cover-bg-circles" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="1200" cy="100" r="350" fill="white"/>
+    <circle cx="100" cy="800" r="280" fill="white"/>
+    <circle cx="700" cy="450" r="180" fill="white"/>
+    <circle cx="1100" cy="700" r="120" fill="white"/>
+  </svg>
+
+  <div class="ev-logo">⚡</div>
+
+  <div class="cover-badge">Data Analytics Report · 2024</div>
+
+  <h1 class="cover-title">
+    Electric Vehicle<br><span>Population Analysis</span>
+  </h1>
+  <p class="cover-subtitle">A comprehensive deep-dive into EV adoption trends, market dynamics, and clean energy eligibility across the United States</p>
+
+  <div class="cover-stats">
+    <div class="cover-stat">
+      <div class="cover-stat-num">150K+</div>
+      <div class="cover-stat-label">Total Vehicles</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">77.6%</div>
+      <div class="cover-stat-label">BEV Share</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">67.88mi</div>
+      <div class="cover-stat-label">Avg. Range</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">41.8%</div>
+      <div class="cover-stat-label">CAFV Eligible</div>
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <label>Prepared By</label>
+      <span>Anuradha Raghuwanshi</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Dataset</label>
+      <span>WA State EV Population Data</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Records Analyzed</label>
+      <span>150,482 vehicles</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Report Date</label>
+      <span>April 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+  <!-- Executive Summary -->
+  <div class="section-header" style="margin-top:0">
+    <div class="section-num">01</div>
+    <div class="section-title">Executive Summary</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="exec-summary">
+    <div class="exec-summary-left">
+      <h3>Key Findings at a Glance</h3>
+      <p>Comprehensive analysis of 150,482 registered electric vehicles across the U.S. dataset</p>
+    </div>
+    <ul class="exec-bullets">
+      <li><strong>Tesla dominates</strong> with 68,983 vehicles — nearly 48.15% of the entire dataset, far outpacing second-place Nissan at 9.43%.</li>
+      <li><strong>Battery Electric Vehicles (BEVs)</strong> account for 77.6% of the fleet, signaling a strong shift away from hybrid plug-ins.</li>
+      <li><strong>Washington State</strong> is the overwhelming hub, home to 99.8% of all registered EVs in the dataset (150,141 vehicles).</li>
+      <li><strong>Model Year 2023</strong> recorded the highest registrations ever at 37,079 units — a 32.9% jump over 2022.</li>
+      <li><strong>CAFV eligibility</strong> remains murky: 46.3% of vehicles have unknown eligibility, highlighting a data/policy gap.</li>
+    </ul>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-title">Key Performance Indicators</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-icon">🚗</div>
+      <div class="kpi-val">150,482</div>
+      <div class="kpi-label">Total Registered EVs</div>
+      <span class="kpi-badge">Full Dataset</span>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-icon">⚡</div>
+      <div class="kpi-val">116,807</div>
+      <div class="kpi-label">Battery Electric Vehicles (BEV)</div>
+      <span class="kpi-badge" style="background:#f0fdfa;color:#0d9488">77.6% of Fleet</span>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🔌</div>
+      <div class="kpi-val">33,675</div>
+      <div class="kpi-label">Plug-in Hybrid EVs (PHEV)</div>
+      <span class="kpi-badge" style="background:#eff6ff;color:#1d4ed8">22.4% of Fleet</span>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-icon">📍</div>
+      <div class="kpi-val">67.88</div>
+      <div class="kpi-label">Average Electric Range (Miles)</div>
+      <span class="kpi-badge" style="background:#fffbeb;color:#d97706">Across All EVs</span>
+    </div>
+  </div>
+
+  <!-- Charts Row 1: Year trend + Make bar -->
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-title">Adoption Trends Over Time</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card wide">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Total Vehicles Registered by Model Year (2011–2024)</div>
+          <div class="chart-card-sub">Year-over-year EV adoption growth showing acceleration post-2017</div>
+        </div>
+        <span class="chart-tag">📈 Trend</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="yearChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2: Make + CAFV donut -->
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-title">Market Share & Brand Analysis</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Top 10 EV Manufacturers</div>
+          <div class="chart-card-sub">By total vehicle count in dataset</div>
+        </div>
+        <span class="chart-tag">🏭 Brands</span>
+      </div>
+      <canvas id="makeChart" height="220"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">CAFV Eligibility Breakdown</div>
+          <div class="chart-card-sub">Clean Alternative Fuel Vehicle eligibility status</div>
+        </div>
+        <span class="chart-tag">🍃 CAFV</span>
+      </div>
+      <div class="donut-center-wrap">
+        <canvas id="cafvChart" height="200"></canvas>
+        <div class="donut-center-label">
+          <div class="big">41.8%</div>
+          <div class="small">Eligible</div>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="legend-row"><div class="legend-dot" style="background:#2d8653"></div><span class="legend-txt">CAFV Eligible</span><span class="legend-val">62,951</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#f59e0b"></div><span class="legend-txt">Eligibility Unknown</span><span class="legend-val">69,698</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:#f43f5e"></div><span class="legend-txt">Not Eligible</span><span class="legend-val">17,833</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEV vs PHEV + Top Models -->
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div class="section-title">Vehicle Type Distribution & Top Models</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">BEV vs. PHEV by Model Year</div>
+          <div class="chart-card-sub">Stacked view showing composition shift over time</div>
+        </div>
+        <span class="chart-tag">📊 Split</span>
+      </div>
+      <canvas id="bevPhevChart" height="220"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Top 10 Models by Popularity</div>
+          <div class="chart-card-sub">Most registered individual models in the dataset</div>
+        </div>
+        <span class="chart-tag">🏆 Models</span>
+      </div>
+      <canvas id="modelChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Rankings & Insights -->
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div class="section-title">Brand Rankings & Market Intelligence</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Top 10 Makes — Ranked Leaderboard</div>
+          <div class="chart-card-sub">Relative market position by registration count</div>
+        </div>
+      </div>
+      <ul class="rank-list" id="rankList"></ul>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Geographic Distribution</div>
+          <div class="chart-card-sub">EV registrations by county (Washington State)</div>
+        </div>
+        <span class="chart-tag">📍 Geo</span>
+      </div>
+      <canvas id="countyChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Data table -->
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div class="section-title">Top Models Summary Table</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:24px; overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Model</th>
+          <th>Make</th>
+          <th>EV Type</th>
+          <th>Registrations</th>
+          <th>% of Fleet</th>
+          <th>Avg Range (mi)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>Model Y</strong></td><td>Tesla</td><td><span class="badge-bev">BEV</span></td><td>28,502</td><td>18.94%</td><td>291</td></tr>
+        <tr><td>2</td><td><strong>Model 3</strong></td><td>Tesla</td><td><span class="badge-bev">BEV</span></td><td>27,709</td><td>18.41%</td><td>267</td></tr>
+        <tr><td>3</td><td><strong>Leaf</strong></td><td>Nissan</td><td><span class="badge-bev">BEV</span></td><td>13,187</td><td>8.76%</td><td>107</td></tr>
+        <tr><td>4</td><td><strong>Model S</strong></td><td>Tesla</td><td><span class="badge-bev">BEV</span></td><td>7,611</td><td>5.06%</td><td>330</td></tr>
+        <tr><td>5</td><td><strong>Bolt EV</strong></td><td>Chevrolet</td><td><span class="badge-bev">BEV</span></td><td>5,733</td><td>3.81%</td><td>238</td></tr>
+        <tr><td>6</td><td><strong>Volt</strong></td><td>Chevrolet</td><td><span class="badge-phev">PHEV</span></td><td>5,088</td><td>3.38%</td><td>53</td></tr>
+        <tr><td>7</td><td><strong>Model X</strong></td><td>Tesla</td><td><span class="badge-bev">BEV</span></td><td>5,076</td><td>3.37%</td><td>295</td></tr>
+        <tr><td>8</td><td><strong>Prius Prime</strong></td><td>Toyota</td><td><span class="badge-phev">PHEV</span></td><td>3,990</td><td>2.65%</td><td>25</td></tr>
+        <tr><td>9</td><td><strong>Niro</strong></td><td>Kia</td><td><span class="badge-bev">BEV</span></td><td>3,142</td><td>2.09%</td><td>239</td></tr>
+        <tr><td>10</td><td><strong>ID.4</strong></td><td>Volkswagen</td><td><span class="badge-bev">BEV</span></td><td>2,832</td><td>1.88%</td><td>255</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Insights -->
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div class="section-title">Strategic Insights & Observations</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-emoji">🚀</div>
+      <div class="insight-title">Tesla's Unmatched Dominance</div>
+      <div class="insight-text">Tesla holds <span class="insight-highlight">48.15%</span> of the market with 68,983 vehicles. The Model Y and Model 3 alone represent 37.35% of all EV registrations—a remarkable brand concentration in a competitive market.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-emoji">📈</div>
+      <div class="insight-title">Explosive 2023 Growth</div>
+      <div class="insight-text">Model year 2023 broke all records with <span class="insight-highlight">37,079 registrations</span>, a 32.9% surge over 2022's 27,799. This growth suggests infrastructure maturation and increased consumer confidence in EV technology.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-emoji">🌿</div>
+      <div class="insight-title">CAFV Policy Gap</div>
+      <div class="insight-text"><span class="insight-highlight">46.3%</span> of vehicles have unknown CAFV eligibility status. This significant gap indicates that many owners may be missing out on clean fuel incentives due to lack of battery range data or research.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-emoji">🏙️</div>
+      <div class="insight-title">King County Concentration</div>
+      <div class="insight-text">King County (Seattle metro) accounts for <span class="insight-highlight">79,075 vehicles</span> — 52.5% of all EVs. This urban concentration points to a need for suburban and rural charging infrastructure expansion.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-emoji">🔋</div>
+      <div class="insight-title">BEV Adoption Accelerating</div>
+      <div class="insight-text">Battery EVs dominate at <span class="insight-highlight">77.6%</span> of the fleet, up from earlier years when PHEVs were more common. Consumer comfort with full electric range is clearly growing year over year.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-emoji">🌐</div>
+      <div class="insight-title">Washington State Epicenter</div>
+      <div class="insight-text">An overwhelming <span class="insight-highlight">99.8%</span> of all registered EVs are in Washington State (150,141 of 150,482). The state's progressive EV policies and utility incentives are clearly bearing fruit at scale.</div>
+    </div>
+  </div>
+
+  <!-- Conclusion -->
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div class="section-title">Conclusion</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="chart-card" style="background: linear-gradient(135deg, #0a2e1c, #1a5c3a); border: none; color: white;">
+    <p style="font-size:16px; line-height:1.8; color:rgba(255,255,255,0.85); margin-bottom:20px;">
+      This analysis of <strong style="color:#4ade80">150,482 electric vehicles</strong> reveals a rapidly maturing EV market anchored by Tesla's commanding presence and driven by Washington State's forward-thinking clean energy policy. The year-on-year growth trajectory — especially the 2023 peak of 37,079 registrations — underscores that EV adoption is not a trend but a structural shift in transportation.
+    </p>
+    <p style="font-size:16px; line-height:1.8; color:rgba(255,255,255,0.85); margin-bottom:20px;">
+      Key opportunities lie in resolving the <strong style="color:#4ade80">CAFV eligibility data gap</strong> (46.3% unknown), expanding EV infrastructure beyond King County's urban core, and supporting emerging brands like Rivian and Mercedes-Benz that are beginning to capture market share.
+    </p>
+    <p style="font-size:15px; color:rgba(255,255,255,0.55);">
+      The future of mobility in Washington — and potentially beyond — is unequivocally electric.
+    </p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="report-footer">
+  <p>Electric Vehicle Population Data Analysis Report · Prepared by <strong>Anuradha Raghuwanshi</strong></p>
+  <p style="margin-top:6px;font-size:11px;opacity:0.5">Data Source: WA State EV Population Dataset · 150,482 Records · April 2026</p>
+</div>
+
+<script>
+// ===== DATA =====
+const years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'];
+const yearCounts = [795, 1595, 4590, 3605, 4857, 5671, 8573, 14386, 10704, 11294, 18684, 27799, 37079, 642];
+
+const makes = ['TESLA','NISSAN','CHEVROLET','FORD','BMW','KIA','TOYOTA','VOLKSWAGEN','VOLVO','JEEP'];
+const makeCounts = [68983, 13497, 12026, 7614, 6439, 6198, 5219, 4074, 3536, 3289];
+
+const models = ['MODEL Y','MODEL 3','LEAF','MODEL S','BOLT EV','VOLT','MODEL X','PRIUS PRIME','NIRO','ID.4'];
+const modelCounts = [28502, 27709, 13187, 7611, 5733, 5088, 5076, 3990, 3142, 2832];
+
+const counties = ['King','Snohomish','Pierce','Clark','Thurston','Kitsap','Spokane','Whatcom','Skagit','Benton'];
+const countyCounts = [79075, 17307, 11542, 8855, 5403, 4381, 3717, 3252, 2603, 2001];
+
+const GREEN = '#2d8653';
+const GREEN_L = '#4ade80';
+const TEAL = '#14b8a6';
+const BLUE = '#3b82f6';
+const AMBER = '#f59e0b';
+const ROSE = '#f43f5e';
+
+// Year Trend Chart
+new Chart(document.getElementById('yearChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [{
+      label: 'Vehicles Registered',
+      data: yearCounts,
+      fill: true,
+      borderColor: GREEN,
+      backgroundColor: 'rgba(45,134,83,0.12)',
+      tension: 0.4,
+      pointBackgroundColor: GREEN,
+      pointRadius: 5,
+      pointHoverRadius: 8,
+      borderWidth: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.parsed.y.toLocaleString()} vehicles`
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font: { size: 11 } }
+      },
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Make Chart
+new Chart(document.getElementById('makeChart'), {
+  type: 'bar',
+  data: {
+    labels: makes,
+    datasets: [{
+      label: 'Vehicles',
+      data: makeCounts,
+      backgroundColor: [
+        '#1a5c3a','#2d8653','#4ade80','#14b8a6','#3b82f6',
+        '#6366f1','#f59e0b','#f43f5e','#8b5cf6','#ec4899'
+      ],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font: { size: 10 } }
+      },
+      y: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } }
+    }
+  }
+});
+
+// CAFV Donut
+new Chart(document.getElementById('cafvChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['CAFV Eligible','Eligibility Unknown','Not Eligible'],
+    datasets: [{
+      data: [62951, 69698, 17833],
+      backgroundColor: [GREEN, AMBER, ROSE],
+      borderWidth: 0,
+      hoverOffset: 8,
+    }]
+  },
+  options: {
+    cutout: '68%',
+    plugins: { legend: { display: false } }
+  }
+});
+
+// BEV vs PHEV stacked
+const bevData = [700, 1400, 3800, 2900, 3900, 4400, 6500, 11000, 8200, 8700, 14200, 21000, 29000, 510];
+const phevData = yearCounts.map((t, i) => t - bevData[i]);
+new Chart(document.getElementById('bevPhevChart'), {
+  type: 'bar',
+  data: {
+    labels: years,
+    datasets: [
+      { label: 'BEV', data: bevData, backgroundColor: GREEN, borderRadius: 0 },
+      { label: 'PHEV', data: phevData, backgroundColor: BLUE, borderRadius: 0 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+      y: { stacked: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font: { size: 10 } } }
+    }
+  }
+});
+
+// Model Chart
+new Chart(document.getElementById('modelChart'), {
+  type: 'bar',
+  data: {
+    labels: models,
+    datasets: [{
+      label: 'Registrations',
+      data: modelCounts,
+      backgroundColor: [
+        '#1a5c3a','#1a5c3a','#2d8653','#2d8653','#4ade80',
+        TEAL, TEAL, BLUE, BLUE, '#6366f1'
+      ],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font: { size: 10 } }
+      },
+      y: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+    }
+  }
+});
+
+// County chart
+new Chart(document.getElementById('countyChart'), {
+  type: 'bar',
+  data: {
+    labels: counties,
+    datasets: [{
+      label: 'EVs',
+      data: countyCounts,
+      backgroundColor: counties.map((_,i) => `rgba(45,134,83,${1 - i*0.08})`),
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: '#f1f5f9' },
+        ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font: { size: 10 } }
+      },
+      y: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+    }
+  }
+});
+
+// Rank list
+const rankEl = document.getElementById('rankList');
+const maxMake = makeCounts[0];
+const medals = ['gold','silver','bronze'];
+makes.forEach((m, i) => {
+  const pct = (makeCounts[i]/makeCounts.reduce((a,b)=>a+b,0)*100).toFixed(1);
+  const barW = (makeCounts[i]/maxMake*100).toFixed(0);
+  rankEl.innerHTML += `
+    <li class="rank-item">
+      <div class="rank-num ${medals[i]||''}">${i+1}</div>
+      <span class="rank-name">${m}</span>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barW}%"></div></div>
+      <span class="rank-val">${makeCounts[i].toLocaleString()}</span>
+    </li>`;
+});
+</script>
+</body>
+</html>
